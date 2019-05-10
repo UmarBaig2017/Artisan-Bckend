@@ -1,0 +1,66 @@
+const mongoose = require('mongoose');
+const locationSchema = new mongoose.Schema({
+   type:{
+       type:String,
+       default:"Point"
+   },
+   coordinates:{
+       type:[Number],
+       index:'2dsphere'
+   }
+})
+const ListingSchema = new mongoose.Schema({
+    title:{
+        type:String,
+        required:true
+    },
+    description:{
+        type:String,
+        required:true
+    },
+    price:{
+        type:Number,
+        required:true
+    },
+    currency:{
+        type:String,
+        default:'USD'
+    },
+    trade:{
+        type:Boolean,
+        default:false
+    },
+    shippingNational:{
+        type:Boolean,
+        default:false
+    },
+    shippingInternational:{
+        type:Boolean,
+        default:false
+    },
+    imageLinks:{
+        type:[String]
+    },
+    geometry:{
+        type:locationSchema
+    },
+    firebaseUID:{
+        type:String,
+        required:true
+    },
+    createdDate:{
+        type:Date,
+        default:Date.now()
+    },
+    Category:{
+        type:String,
+        required:true
+    },
+    subCategory:{
+        type:String,
+        required:true
+    }
+});
+ListingSchema.index({name:'text','title':"text"})
+ListingSchema.index({geometry:"2dsphere"});
+module.exports = mongoose.model('Listings', ListingSchema);
