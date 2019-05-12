@@ -10,6 +10,8 @@ const Activity = require('./models/ProfileActivity')
 const Shipping = require('./models/Shipping')
 const Category = require('./models/Categories')
 const Chats = require('./models/Chats')
+const Reports = require('./models/Reports')
+const Icons = require('./models/Icons')
 const port = process.env.PORT || 5000
 const cors = require('cors')
 const client = require('socket.io').listen(5001).sockets;
@@ -60,6 +62,7 @@ app.post('/api/status', (req, res) => {
         })
     })
 })
+
 app.put('/api/login', (req, res) => {
     console.log('API call', req.body)
     const firebaseUID = req.body
@@ -94,7 +97,6 @@ app.post('/api/addListing', (req, res) => {
         })
     })
 })
-
 app.put('/api/addToken',(req,res)=>{
     const {token} = req.body
     console.log(token)
@@ -145,87 +147,6 @@ app.post('/api/findByLocation',(req,res)=>{
 
      })
 })
-
-
-app.post('/api/getUsers:page', (req, res) => {
-    const query = Object.assign({}, req.body)
-    var perPage = 20
-    var page = req.params.page || 1
-    console.log(query)
-    if (query.hasOwnProperty("minPrice")) {
-        delete query.minPrice
-        delete query.maxPrice
-        if (query.hasOwnProperty('last')) {
-            let startDate = new Date()
-            startDate.setDate(startDate.getDate() - query.last)
-            startDate.setHours(0)   // Set the hour, minute and second components to 0
-            startDate.setMinutes(0)
-            startDate.setSeconds(0)
-            User.find({
-                trade: query.trade, $or: [{ shippingNational: query.deliverable }, { shippingInternational: query.deliverable }], price: {
-                    $lte: req.body.maxPrice,
-                    $gte: req.body.minPrice
-                },
-                createdDate: { $gte: startDate }
-            }).skip((perPage * page) - perPage).limit(perPage).exec((err, data) => {
-
-                User.estimatedDocumentCount().exec((err, count) => {
-                    if (err) return res.json({ message: err })
-                    res.json({
-                        data,
-                        current: page,
-                        pages: Math.ceil(count / perPage)
-                    })
-                })
-            })
-        }
-        else {
-            User.find({
-                trade: req.body.trade, $or: [{ shippingNational: req.body.deliverable }, { shippingInternational: req.body.deliverable }], price: {
-                    $lte: req.body.maxPrice,
-                    $gte: req.body.minPrice
-                }
-            }).skip((perPage * page) - perPage).limit(perPage).exec((err, data) => {
-
-                User.estimatedDocumentCount().exec((err, count) => {
-                    if (err) return res.json({ message: err })
-                    res.json({
-                        data,
-                        current: page,
-                        pages: Math.ceil(count / perPage)
-                    })
-                })
-            })
-        }
-    }
-    else {
-        User.find(query).skip((perPage * page) - perPage).limit(perPage).exec((err, data) => {
-            User.estimatedDocumentCount().exec((err, count) => {
-                if (err) return res.json({ message: err })
-                res.json({
-                    data,
-                    current: page,
-                    pages: Math.ceil(count / perPage)
-                })
-            })
-        })
-    }
-})
-
-
-app.delete('/api/deleteListing:_id',function(req,res){
-    Listings.findByIdAndRemove(req.params._id, (err, doc) => {
-        if (err) res.json(err)
-        res.json({
-            message: "Success",
-            data: doc
-        })
-    })
-    
-})
-
-
-
 app.post('/api/getListings:page', (req, res) => {
     const query = Object.assign({}, req.body)
     var perPage = 20
@@ -289,6 +210,32 @@ app.post('/api/getListings:page', (req, res) => {
             })
         })
     }
+})
+app.post('/api/addIcons',(req,res)=>{
+    const data = req.body
+    let icons = data.map(icon=>{
+        return{
+            name:icon,
+            type:'ionicon'
+        }
+    })
+    Icons.create(icons,(err,docs)=>{
+        if(err)throw err
+        res.json({
+            message:'Success',
+            docs
+        })
+    })
+})
+app.get('/api/getIcons:type',(req,res)=>{
+    let {type} = req.params
+    Icons.find({type:type},(err,docs)=>{
+        if(err)throw err
+        res.json({
+            message:'Success',
+            docs
+        })
+    })
 })
 app.get('/api/getListing:listingId', (req, res) => {
     Listings.findById(req.params.listingId, (err, doc) => {
@@ -395,6 +342,15 @@ app.put('/api/addFavorite', (req, res) => {
         })
     })
 })
+app.post('/api/report',(req,res)=>{
+    Reports.create(req.body,(err,doc)=>{
+        if(err)throw err
+        res.json({
+            message:"Success",
+            data:doc
+        })
+    })
+})
 // app.get('/api/getChats',(req,res)=>{
 //     const chatIds = req.body
 //     let chats = []
@@ -460,6 +416,15 @@ app.get('/api/getTokens:firebaseUID',(req,res)=>{
                 doc
             })
         })
+})
+app.get('/api/getCategories',(req,res)=>{
+    Category.find({},(err,docs)=>{
+        if (err) throw err
+        res.json({
+            message: "success",
+            docs
+        })
+    })
 })
 app.put('/api/getMessages', (req, res) => {         //get messages of a chat from listing
     Chats.findOne({ sellerUserID: req.body.sellerUserID, firebaseUID: req.body.firebaseUID }, (err, docs) => {
