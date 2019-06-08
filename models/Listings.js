@@ -59,6 +59,9 @@ const ListingSchema = new mongoose.Schema({
     subCategory:{
         type:String,
         required:true
+    },
+    accountID:{
+        type:String
     }
 });
 ListingSchema.index({name:'text','title':"text"})

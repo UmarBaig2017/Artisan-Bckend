@@ -12,6 +12,12 @@ Conversations:{
 firebaseUID:{
     type:String,
     required:true
+},
+Orders:{
+    type:[String]
+},
+Purchases:{
+    type:[String]
 }
 });
 
