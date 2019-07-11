@@ -26,24 +26,28 @@ const ChatsSchema = new mongoose.Schema({
     type:[MessageSchema]
     },
     firebaseUID:{
-    type:String
+    type:String,
+    required:true
     },
     sellerUserID:{
-        type:String
+        type:String,
+        required:true
     },
     sellerProfilePic:{
         type:String,
         default:'https://placeimg.com/140/140/any'
     },
     sellerFname:{         //seller
-        type:String
+        type:String,
+        required:true
     },
     buyerProfilePic:{
         type:String,
         default:'https://placeimg.com/140/140/any'
     },
     buyerFname:{         //seller
-        type:String
+        type:String,
+        required:true
     },
 });
 

@@ -10,20 +10,69 @@ const Activity = require('./models/ProfileActivity')
 const Shipping = require('./models/Shipping')
 const Category = require('./models/Categories')
 const Chats = require('./models/Chats')
+const Orders = require('./models/Orders')
 const Reports = require('./models/Reports')
-const Icons = require('./models/Icons')
+const Icons = require('./models/Icons');
+
+var serviceAccount = require("./service.json");
+const admin = require('firebase-admin');
+const PaymentInfo = require('./models/PaymentInfo')
 const port = process.env.PORT || 5000
 const cors = require('cors')
 const client = require('socket.io').listen(5001).sockets;
 app.use(bodyParser.json())  //Body Parser MiddleWare
 app.use(express.json())
-mongoose.connect('mongodb://demo:demo123@ds133137.mlab.com:33137/puroartisan', { useNewUrlParser: true }) //MongoDB connection using Mongoose
+mongoose.connect('mongodb://demo:demo123@ds347467.mlab.com:47467/artisanpractice', { useNewUrlParser: true }) //MongoDB connection using Mongoose
 var db = mongoose.connection //Mongo Connection Instance
 db.on('open', () => console.log('database connected'))
 app.use(cors())
 app.get('/', function (req, res) {  //HomePage for API
     res.json({ message: 'Welcome' })
 })
+
+//  admin Auth Firebase
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: "https://adminpanelbruc.firebaseio.com"
+  });
+  admin.auth().getUserByEmail('admin@gmail.com')
+    .then(function(userRecord) {
+      // See the UserRecord reference doc for the contents of userRecord.
+      console.log('Successfully fetched user data:', userRecord.toJSON());
+    })
+    .catch(function(error) {
+     console.log('Error fetching user data:', error);
+    });
+  
+  app.delete("/api/deleteAdminOrUSer",(req,res)=>{
+      admin.auth().deleteUser(req.body.uid)
+    .then(function() {
+        res.send("User deleted wrng");
+    })
+    .catch(function(error) {
+        res.send("something wrng");
+    });
+  })
+  app.put("/api/createUser",(req,res)=>{
+      admin.auth().createUser({
+          email: req.body.email,
+          password: req.body.password,
+          displayName: req.body.name,
+          disabled: false
+        })
+          .then(function(userRecord) {
+            // See the UserRecord reference doc for the contents of userRecord.
+            console.log('Successfully created new user:', userRecord.uid);
+            
+          })
+          .catch(function(error) {
+            console.log('Error creating new user:', error);
+          });
+  })
+  
+
+//   rest of server calls
 
 app.post('/api/addUser', (req, res) => {
     console.log(req.body)
@@ -51,6 +100,40 @@ app.put('/api/addImage', (req, res) => {
         })
     }
 })
+
+app.get("/api/allUsers",(req,res)=>{
+    User.find({} , (err , sales)=>{
+        if (err){
+            res.send("something wrng");
+        }
+        res.json(sales)
+       })
+})
+app.get("/api/AllListings",(req,res)=>{
+    Listings.find({} , (err , sales)=>{
+        if (err){
+            res.send("something wrng");
+        }
+        res.json(sales)
+       })
+})
+app.get("/api/AllSales",(req,res)=>{
+    Orders.find({} , (err , sales)=>{
+        if (err){
+            res.send("something wrng");
+        }
+        res.json(sales)
+       })
+})
+
+app.get("/api/AllCatigories",(req,res)=>{
+    Category.find({} , (err , sales)=>{
+        if (err){
+            res.send("something wrng");
+        }
+        res.json(sales)
+       })
+})
 app.post('/api/status', (req, res) => {
 
 
@@ -63,6 +146,9 @@ app.post('/api/status', (req, res) => {
     })
 })
 
+
+
+
 app.put('/api/login', (req, res) => {
     console.log('API call', req.body)
     const firebaseUID = req.body
@@ -74,6 +160,32 @@ app.put('/api/login', (req, res) => {
         })
     })
 })
+app.post('/api/getOrders', (req, res) => {
+    Orders.find({} , (err , sales)=>{
+     if (err){
+         res.send("something wrng");
+     }
+     res.json(sales)
+    })
+ })
+ app.delete('/api/deletOrder',(req,res)=>{
+    Orders.findByIdAndRemove(req.body.id, (err, doc) => {
+        if (err) res.json(err)
+        res.json({
+            message: "Success",
+            data: doc
+        })
+    })
+ })
+ app.delete('/api/deleteListing',(req,res)=>{
+    Listings.findByIdAndRemove(req.body.id, (err, doc) => {
+        if (err) res.json(err)
+        res.json({
+            message: "Success",
+            data: doc
+        })
+    })
+ })
 app.put('/api/logout', (req, res) => {
     const firebaseUID = req.body
     User.findOneAndUpdate(firebaseUID, { isLoggedIn: false }, { new: true }, (err, doc) => {
@@ -340,6 +452,44 @@ app.get('/api/getProfile:firebaseUID', (req, res) => {
         })
     })
 })
+app.delete('/api/deleteUser',(req,res)=>{
+    User.findByIdAndRemove(req.body.id, (err, doc) => {
+        if (err) res.json(err)
+        res.json({
+            message: "Success",
+            data: doc
+        })
+    })
+ })
+app.delete('/api/deleteActivityUserUID',(req,res)=>{
+    Activity.findOneAndDelete(req.body.uid, (err, doc) => {
+        if (err) res.json(err)
+        res.json({
+            message: "Success",
+            data: doc
+        })
+    })
+ })
+
+app.delete('/api/deleteShippingUID',(req,res)=>{
+    Shipping.findOneAndDelete(req.body.uid, (err, doc) => {
+        if (err) res.json(err)
+        res.json({
+            message: "Success",
+            data: doc
+        })
+    })
+ })
+app.delete('/api/deletePaymentInfoUID',(req,res)=>{
+    PaymentInfo.findOneAndDelete(req.body.uid, (err, doc) => {
+        if (err) res.json(err)
+        res.json({
+            message: "Success",
+            data: doc
+        })
+    })
+ })
+
 app.post('/api/addCategory', (req, res) => {
     Category.create(req.body, (err, docs) => {
         if (err) res.json(err)
@@ -351,6 +501,15 @@ app.post('/api/addCategory', (req, res) => {
 })
 app.post('/api/addSubCategory', (req, res) => {
     Category.findByIdAndUpdate({ _id: req.body.id }, { $push: { subCategories: req.body } }, { new: true }, (err, docs) => {
+        if (err) res.json(err)
+        res.json({
+            message: "Success",
+            data: docs
+        })
+    })
+})
+app.put('/api/deleteSubCategory', (req, res) => {
+    Category.findByIdAndUpdate({ _id: req.body.id }, { $set: { subCategories: req.body.subCategories } }, (err, docs) => {
         if (err) res.json(err)
         res.json({
             message: "Success",
@@ -385,6 +544,21 @@ app.post('/api/report',(req,res)=>{
         })
     })
 })
+app.post("/api/addOrder", (req , res)=>{
+
+    Orders.create(req.body,(err,doc)=>{
+        if(err) res.json({err})
+        res.json({
+            message: "Success",
+            data: doc
+        })
+    })
+
+
+
+})
+
+
 // app.get('/api/getChats',(req,res)=>{
 //     const chatIds = req.body
 //     let chats = []
@@ -460,6 +634,18 @@ app.get('/api/getCategories',(req,res)=>{
         })
     })
 })
+
+// user Search
+app.get('/api/getSearchedUsers',(req,res)=>{
+    Category.find(  (err,docs)=>{
+        if (err) throw err
+        res.json({
+            message: "success",
+            docs
+        })
+    })
+})
+// 
 app.put('/api/getMessages', (req, res) => {         //get messages of a chat from listing
     Chats.findOne({ sellerUserID: req.body.sellerUserID, firebaseUID: req.body.firebaseUID }, (err, docs) => {
         if (err) res.json(err)
@@ -488,6 +674,7 @@ app.put('/api/getMessages', (req, res) => {         //get messages of a chat fro
         }
     })
 })
+
 app.post('/api/getUsers:page', (req, res) => {
     const query = Object.assign({}, req.body)
     var perPage = 20
@@ -554,7 +741,15 @@ app.post('/api/getUsers:page', (req, res) => {
 })
 app.put('/api/searchListing', (req, res) => {
     Listings.find({ $text: { $search: req.body.title } })
-        .limit(10)
+        .limit(30)
+        .exec((err, docs) => {
+            if (err) throw err
+            res.json(docs)
+        });
+})
+app.post('/api/userSearch', (req, res) => {
+    User.find({ $text: { $search: req.body.name } })
+        .limit(20)
         .exec((err, docs) => {
             if (err) throw err
             res.json(docs)

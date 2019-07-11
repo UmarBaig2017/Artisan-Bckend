@@ -1,18 +1,22 @@
 const mongoose = require('mongoose');
 const deliverySchema = new mongoose.Schema({
     from:{
-        type:Number
+        type:Number,
+        required:true
     },
     to:{
-        type:Number
+        type:Number,
+        required:true
     }
 })
 const ShippingSchema = new mongoose.Schema({
   domesticService:{
-      type:String
+      type:String,
+      required:true
   },
   domCost:{
-      type:Number
+      type:Number,
+      required:true
   },
   domAdditional:{
       type:Number
@@ -21,10 +25,12 @@ const ShippingSchema = new mongoose.Schema({
     type:deliverySchema
   },
   internationalService:{
-      type:String
+      type:String,
+      required:true
   },
   intCost:{
-      type:Number
+      type:Number,
+      required:true
   },
   intAdditional:{
       type:Number
@@ -35,17 +41,6 @@ const ShippingSchema = new mongoose.Schema({
   firebaseUID:{
       type:String,
       required:true
-  },
-  title:{
-      type:String,
-      required:true
-  },
-  description:{
-      type:String,
-      required:true
-  },
-  type:{
-      type:String
   }
 });
 

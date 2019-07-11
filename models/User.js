@@ -7,7 +7,7 @@ const UserSchema = new mongoose.Schema({
   },
   fName:{
       type:String,
-      rrequired:[true,'Full Name is required']
+      required:[true,'Full Name is required']
   },
   profilePic:{
       type:String
@@ -28,5 +28,5 @@ const UserSchema = new mongoose.Schema({
   }
 
 });
-
+UserSchema.index({name: 'text', ' fName': 'text'});
 module.exports = mongoose.model('Users', UserSchema);
