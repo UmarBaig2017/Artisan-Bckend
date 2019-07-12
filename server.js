@@ -45,15 +45,22 @@ admin.initializeApp({
      console.log('Error fetching user data:', error);
     });
   
+
   app.delete("/api/deleteAdminOrUSer",(req,res)=>{
       admin.auth().deleteUser(req.body.uid)
-    .then(function() {
-        res.send("User deleted wrng");
+    .then(()=> {
+        console.log('deleted')  
+        res.json({
+            message: "success",
+
+        })
     })
     .catch(function(error) {
         res.send("something wrng");
     });
   })
+
+
   app.put("/api/createUser",(req,res)=>{
       admin.auth().createUser({
           email: req.body.email,
@@ -285,6 +292,7 @@ app.post('/api/getListings:page', (req, res) => {
 
                 Listings.estimatedDocumentCount().exec((err, count) => {
                     if (err) return res.json({ message: err })
+                    console.log(data)
                     res.json({
                         data,
                         current: page,
